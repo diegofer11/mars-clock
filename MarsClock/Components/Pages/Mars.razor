@@ -1,0 +1,85 @@
+﻿@page "/mars"
+@using System.Timers
+
+<PageTitle>Mars Clock</PageTitle>
+
+<h1>Reloj en Marte</h1>
+
+<p>Martian Calendar Day (Sol): @_martianCalendarDay</p>
+<p>Martian Date (Year-Month-Day): @_martianDate.year-@_martianDate.month-@_martianDate.day</p>
+<p>Martian Time (UTC+0): @_marsUtcTime.ToString("HH:mm:ss")</p>
+
+@code
+{
+    private long _martianCalendarDay;
+    private (int year, int month, int day) _martianDate;
+    private DateTime _marsUtcTime;
+    private Timer? _timer;
+    private const int MarsYearLength = 668;
+
+    private readonly string[] _marsMonths =
+    [
+        "Chunfen", "Qingming", "Guyu", "Lixia", "Xiaoman", "Mangzhong",
+        "Xiazhi", "Xiaoshu", "Dashu", "Liqiu", "Chushu", "Bailu",
+        "Qiufen", "Hanlu", "Shuangjiang", "Lidong", "Daxue", "Xiaohan",
+        "Lichun", "Yushui", "Jingzhe", "Xiaoxue", "Dahan", "Dongzhi"
+    ];
+
+    protected override void OnInitialized()
+    {
+        _timer = new Timer(1000);
+        _timer.Elapsed += UpdateMarsTime;
+        _timer.Start();
+
+        UpdateMarsTime(null, null);
+    }
+
+    private void UpdateMarsTime(object? sender, ElapsedEventArgs? e)
+    {
+        InvokeAsync(() =>
+        {
+            var earthTime = DateTime.UtcNow;
+            var millisSinceEpoch = earthTime.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+
+            const double marsDayInSeconds = 24 * 3600 + 39 * 60 + 35.244;
+            const double marsDayInMilliseconds = marsDayInSeconds * 1000;
+
+            var marsTimeMillis = millisSinceEpoch % marsDayInMilliseconds;
+            _marsUtcTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(marsTimeMillis);
+
+            _martianCalendarDay = (long)(millisSinceEpoch / marsDayInMilliseconds);
+
+            _martianDate = ConvertSolToMartianDate(_martianCalendarDay);
+
+            StateHasChanged();
+        });
+    }
+
+    private (int year, int month, int day) ConvertSolToMartianDate(long sol)
+    {
+        var year = (int)(sol / MarsYearLength);
+        var remainingSols = (int)(sol % MarsYearLength);
+
+        var month = 0;
+        var day = remainingSols;
+
+        for (var i = 0; i < _marsMonths.Length; i++)
+        {
+            if (remainingSols < 28)
+            {
+                month = i + 1;
+                day = remainingSols + 1;
+                break;
+            }
+
+            remainingSols -= 28;
+        }
+
+        return (year, month, day);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}
