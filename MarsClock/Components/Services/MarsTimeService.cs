@@ -19,7 +19,13 @@ public class MarsTimeService
     
     public double GetMarsMeanAnomaly(double deltaJ2000)
     {
-        return 19.3870 + (0.52402075 * deltaJ2000);
+        var meanAnomaly = 19.3870 + (0.52402075 * deltaJ2000);
+        meanAnomaly %= 360;
+        if (meanAnomaly < 0)
+        {
+            meanAnomaly += 360;
+        }
+        return meanAnomaly;
     }
     
     public double GetFictionMeanSun(double deltaJ2000)
