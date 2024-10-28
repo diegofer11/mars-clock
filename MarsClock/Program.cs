@@ -1,10 +1,14 @@
 using MarsClock.Components;
+using MarsClock.Components.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Add singleton to inject MarsTimeService
+builder.Services.AddScoped<MarsTimeService>();
 
 var app = builder.Build();
 
