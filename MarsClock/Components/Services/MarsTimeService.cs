@@ -30,7 +30,13 @@ public class MarsTimeService
     
     public double GetFictionMeanSun(double deltaJ2000)
     {
-        return 270.3871 + (0.524038496 * deltaJ2000);
+        var alphaMeanSun = 270.3873 + (0.52403840 * deltaJ2000);
+        alphaMeanSun %= 360;
+        if (alphaMeanSun < 0)
+        {
+            alphaMeanSun += 360;
+        }
+        return alphaMeanSun;
     }
     
     public double GetEquationOfCenter(double marsMeanAnomaly, double deltaJ2000)
