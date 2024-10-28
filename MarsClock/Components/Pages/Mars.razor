@@ -19,11 +19,11 @@
 <p>Mars Sol Date (MSD): @_formattedMsd</p>
 <p>Coordinated Mars Time (CMT): @_coordinatedMarsTime</p>
 <p>Mars Mean Anomaly (M): @_formattedMeanAnomaly</p>
-<p>Angle of Fiction Mean Sun  (alphaFMS): @_alphaFms</p>
-<p>Mars Local Mean Solar Time (LMST): @_marsLocalMeanSolarTime</p>
-<p>Equation of Center: @_equationOfCenter</p>
-<p>Aerocentric solar longitude: @_solarLongitude</p>
-<p>EOT: @_eot</p>
+<p>Angle of Fiction Mean Sun (alphaFMS): @_formattedAlphaFms</p>
+<p>Mars Local Mean Solar Time (LMST): @_formattedMlmst</p>
+<p>Equation of Center: @_formattedEoc</p>
+<p>Areocentric solar longitude: @_formattedSolarLongitude</p>
+<p>EOT: @_formattedEot</p>
 
 @code
 {
@@ -35,14 +35,14 @@
     private string _formattedDaysSinceJ2000Epoch = string.Empty;
     private string _formattedMsd = string.Empty;
     private string _coordinatedMarsTime = string.Empty;
-    private double _marsLocalMeanSolarTime;
     private string _formattedMeanAnomaly = string.Empty;
-    private double _eot;
-    private double _alphaFms;
-    private double _equationOfCenter;
-    private double _solarLongitude;
+    private string _formattedAlphaFms = string.Empty;
+    private string _formattedMlmst = string.Empty;
+    private string _formattedEoc = string.Empty;
+    private string _formattedEot = string.Empty;
+    private string _formattedSolarLongitude = string.Empty;
     private const double MarsLongitude = 0;
-    
+
 
     protected override void OnInitialized()
     {
@@ -59,33 +59,37 @@
         {
             NumberFormat = { NumberDecimalSeparator = ",", NumberGroupSeparator = "." }
         };
-        
+
         var millis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var julianDateUt = Mts.GetJulianDateUt(millis);
         var julianDateTt = Mts.GetJulianDateTt(julianDateUt);
         var daysSinceJ2000Epoch = Mts.GetDeltaJ2000(julianDateTt);
         var marsSolDate = ((daysSinceJ2000Epoch - 4.5) / 1.0274912517) + 44796.0 - 0.00096;
         var marsMeanAnomaly = Mts.GetMarsMeanAnomaly(daysSinceJ2000Epoch);
-        
+        var alphaFms = Mts.GetFictionMeanSun(daysSinceJ2000Epoch);
+        var equationOfCenter = Mts.GetEquationOfCenter(marsMeanAnomaly, daysSinceJ2000Epoch);
+        var solarLongitude = Mts.GetAreocentricSolarLongitude(alphaFms, equationOfCenter);
+        var equationOfTime = Mts.GetEquationOfTime(solarLongitude, equationOfCenter);
+        var marsLocalMeanSolarTime = Mts.GetLocalMeanSolarTime(marsSolDate, MarsLongitude);
+
         _earthDateTime = DateTimeOffset.UtcNow.UtcDateTime;
-        _alphaFms = Mts.GetFictionMeanSun(daysSinceJ2000Epoch);
-        _equationOfCenter = Mts.GetEquationOfCenter(marsMeanAnomaly, daysSinceJ2000Epoch);
-        _solarLongitude = Mts.GetAreocentricSolarLongitude(_alphaFms, _equationOfCenter);
-        _eot = Mts.GetEquationOfTime(_solarLongitude, _equationOfCenter);
-        
-        _marsLocalMeanSolarTime = Mts.GetLocalMeanSolarTime(marsSolDate, MarsLongitude);
         _coordinatedMarsTime = Mts.GetCoordinatedMarsTime(marsSolDate);
-        
+
         _formattedMillis = millis.ToString("N0", cultureInfo);
-        _formattedJulianDateUt = julianDateUt.ToString("N6", cultureInfo);
-        _formattedJulianDateTt = julianDateTt.ToString("N6", cultureInfo);
-        _formattedDaysSinceJ2000Epoch = daysSinceJ2000Epoch.ToString("N6", cultureInfo);
-        _formattedMsd = marsSolDate.ToString("N6", cultureInfo);
-        _formattedMeanAnomaly = marsMeanAnomaly.ToString("N6", cultureInfo);
-        
+        _formattedJulianDateUt = julianDateUt.ToString("N5", cultureInfo);
+        _formattedJulianDateTt = julianDateTt.ToString("N5", cultureInfo);
+        _formattedDaysSinceJ2000Epoch = daysSinceJ2000Epoch.ToString("N5", cultureInfo);
+        _formattedMsd = marsSolDate.ToString("N5", cultureInfo);
+        _formattedMeanAnomaly = marsMeanAnomaly.ToString("N5", cultureInfo);
+        _formattedAlphaFms = alphaFms.ToString("N5", cultureInfo);
+        _formattedEoc = equationOfCenter.ToString("N5", cultureInfo);
+        _formattedSolarLongitude = solarLongitude.ToString("N5", cultureInfo);
+        _formattedEot = equationOfTime.ToString("N5", cultureInfo);
+        _formattedMlmst = marsLocalMeanSolarTime.ToString("N5", cultureInfo);
+
         InvokeAsync(StateHasChanged);
     }
-    
+
     public void Dispose()
     {
         _timer?.Dispose();
