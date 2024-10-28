@@ -8,7 +8,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add singleton to inject MarsTimeService
-builder.Services.AddSingleton<MarsTimeService>();
+builder.Services.AddScoped<MarsTimeService>();
 
 var app = builder.Build();
 

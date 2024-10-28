@@ -1,19 +1,46 @@
 ﻿@page "/mars"
 @using System.Timers
 @using MarsClock.Components.Services
+@inject MarsTimeService Mts
 
 <PageTitle>Mars Clock</PageTitle>
 
 <h1>Mars time</h1>
 
+<h2>Earth</h2>
+<p>Earth Date and Time (UTC): @_earthDateTime</p>
+<p>Millis: @_millis</p>
+<p>Julian Date UT (JDUT): @_julianDateUt</p>
+<p>Julian Date TT (JDTT): @_julianDateTt</p>
+<p>Days Since J2000 Epoch: @_daysSinceJ2000Epoch</p>
+
+<h2>Mars</h2>
+<p>Mars Sol Date (MSD): @_marsSolDate</p>
+<p>Coordinated Mars Time (CMT): @_coordinatedMarsTime</p>
+<p>Mars Mean Anomaly (M): @_marsMeanAnomaly</p>
+<p>Angle of Fiction Mean Sun  (alphaFMS): @_alphaFms</p>
 <p>Mars Local Mean Solar Time (LMST): @_marsLocalMeanSolarTime</p>
 <p>Mars Local True Solar Time (LTST): @_marsLocalTrueSolarTime</p>
+<p>Equation of Center: @_equationOfCenter</p>
+<p>EOT: @_eot</p>
 
 @code
 {
     private Timer? _timer;
+    private DateTime _earthDateTime;
+    private long _millis;
+    private double _julianDateUt;
+    private double _julianDateTt;
+    private double _daysSinceJ2000Epoch;
+    private double _marsSolDate;
+    private string _coordinatedMarsTime = string.Empty;
     private double _marsLocalMeanSolarTime;
+    private double _marsMeanAnomaly;
     private double _marsLocalTrueSolarTime;
+    private double _eot;
+    private double _alphaFms;
+    private double _equationOfCenter;
+    private double _solarLongitude;
     private const double MarsLongitude = 0;
 
     protected override void OnInitialized()
@@ -27,22 +54,32 @@
 
     private void UpdateMarsTime(object? sender, ElapsedEventArgs? e)
     {
-        var millis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var julianDateUt = MarsTimeService.GetJulianDateUt(millis);
-        var julianDateTt = MarsTimeService.GetJulianDateTt(julianDateUt,69.184);
-        var deltaJ2000 = MarsTimeService.DeltaJ2000(julianDateTt);
+        _millis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _earthDateTime = DateTimeOffset.UtcNow.UtcDateTime;
         
-        var marsMeanAnomaly = MarsTimeService.MarsMeanAnomaly(deltaJ2000);
-        var alphaFms = MarsTimeService.FictionMeanSun(deltaJ2000);
-        var equationOfCenter = MarsTimeService.EquationOfCenter(marsMeanAnomaly, deltaJ2000);
-        var solarLongitude = MarsTimeService.AreocentricSolarLongitude(alphaFms, equationOfCenter);
+        _julianDateUt = Mts.GetJulianDateUt(_millis);
+        _julianDateTt = Mts.GetJulianDateTt(_julianDateUt,69.184);
         
-        var eot = MarsTimeService.EquationOfTime(solarLongitude, equationOfCenter);
-        var marsSolDate = (julianDateTt - 2451549.5 + deltaJ2000 * 1.0274912517) / 1.0274912517;
+        _daysSinceJ2000Epoch = Mts.DeltaJ2000(_julianDateTt);
         
-        _marsLocalMeanSolarTime = MarsTimeService.LocalMeanSolarTime(marsSolDate, MarsLongitude);
-        _marsLocalTrueSolarTime = MarsTimeService.LocalTrueSolarTime(_marsLocalMeanSolarTime, eot);
+        _marsMeanAnomaly = Mts.MarsMeanAnomaly(_daysSinceJ2000Epoch);
+        
+        _alphaFms = Mts.FictionMeanSun(_daysSinceJ2000Epoch);
+        _equationOfCenter = Mts.EquationOfCenter(_marsMeanAnomaly, _daysSinceJ2000Epoch);
+        _solarLongitude = Mts.AreocentricSolarLongitude(_alphaFms, _equationOfCenter);
+        
+        _marsSolDate = (_julianDateTt - 2451549.5 + _daysSinceJ2000Epoch * 1.0274912517) / 1.0274912517;
+        
+        _eot = Mts.EquationOfTime(_solarLongitude, _equationOfCenter);
+        
+        _marsLocalMeanSolarTime = Mts.LocalMeanSolarTime(_marsSolDate, MarsLongitude);
+        _coordinatedMarsTime = Mts.GetCoordinatedMarsTime(_marsSolDate);
         
         InvokeAsync(StateHasChanged);
+    }
+    
+    public void Dispose()
+    {
+        _timer?.Dispose();
     }
 }
