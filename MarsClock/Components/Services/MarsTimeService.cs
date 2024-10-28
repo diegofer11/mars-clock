@@ -75,6 +75,11 @@ public class MarsTimeService
         return $"{hours:D2}:{minutes:D2}:{seconds:D2}";
     }
 
+    public double GetMarsSolDate(double daysSinceJ2000Epoch)
+    {
+        return ((daysSinceJ2000Epoch - 4.5) / 1.0274912517) + 44796.0 - 0.00096;
+    }
+    
     public double GetLocalTrueSolarTime(double localMeanSolarTime, double eot)
     {
         return localMeanSolarTime + (eot / 15);
