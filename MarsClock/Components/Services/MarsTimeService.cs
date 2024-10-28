@@ -7,27 +7,27 @@ public class MarsTimeService
         return 2440587.5 + (millis / 8.64e7);
     }
     
-    public double GetJulianDateTt(double julianDateUt, double ttMinusUtc)
+    public double GetJulianDateTt(double julianDateUt)
     {
-        return julianDateUt + (ttMinusUtc / 86400.0);
+        return julianDateUt + (37 + 32.184) / 86400;
     }
 
-    public double DeltaJ2000(double julianDateTt)
+    public double GetDeltaJ2000(double julianDateTt)
     {
         return julianDateTt - 2451545.0;
     }
     
-    public double MarsMeanAnomaly(double deltaJ2000)
+    public double GetMarsMeanAnomaly(double deltaJ2000)
     {
-        return 19.3871 + (0.52402073 * deltaJ2000);
+        return 19.3870 + (0.52402075 * deltaJ2000);
     }
     
-    public double FictionMeanSun(double deltaJ2000)
+    public double GetFictionMeanSun(double deltaJ2000)
     {
         return 270.3871 + (0.524038496 * deltaJ2000);
     }
     
-    public double EquationOfCenter(double marsMeanAnomaly, double deltaJ2000)
+    public double GetEquationOfCenter(double marsMeanAnomaly, double deltaJ2000)
     {
         double perturbers = 0;
         return (10.691 + 3.0e-7 * deltaJ2000) * Math.Sin(marsMeanAnomaly * Math.PI / 180)
@@ -37,18 +37,18 @@ public class MarsTimeService
                + 0.0005 * Math.Sin(5 * marsMeanAnomaly * Math.PI / 180) + perturbers;
     }
 
-    public double AreocentricSolarLongitude(double alphaFictionMeanSun, double equationOfCenter)
+    public double GetAreocentricSolarLongitude(double alphaFictionMeanSun, double equationOfCenter)
     {
         return alphaFictionMeanSun + equationOfCenter;
     }
     
-    public double EquationOfTime(double solarLongitude, double equationOfCenter)
+    public double GetEquationOfTime(double solarLongitude, double equationOfCenter)
     {
         return 2.861 * Math.Sin(2 * solarLongitude * Math.PI / 180) - 0.071 * Math.Sin(4 * solarLongitude * Math.PI / 180)
             + 0.002 * Math.Sin(6 * solarLongitude * Math.PI / 180) - equationOfCenter;
     }
     
-    public double LocalMeanSolarTime(double marsSolDate, double longitude)
+    public double GetLocalMeanSolarTime(double marsSolDate, double longitude)
     {
         return (marsSolDate * 24) % 24 - (longitude / 15);
     }
@@ -63,7 +63,7 @@ public class MarsTimeService
         return $"{hours:D2}:{minutes:D2}:{seconds:D2}";
     }
 
-    public double LocalTrueSolarTime(double localMeanSolarTime, double eot)
+    public double GetLocalTrueSolarTime(double localMeanSolarTime, double eot)
     {
         return localMeanSolarTime + (eot / 15);
     }
