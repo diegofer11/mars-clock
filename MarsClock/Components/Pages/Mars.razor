@@ -55,11 +55,6 @@
 
     private void UpdateMarsTime(object? sender, ElapsedEventArgs? e)
     {
-        var cultureInfo = new CultureInfo("es-ES")
-        {
-            NumberFormat = { NumberDecimalSeparator = ",", NumberGroupSeparator = "." }
-        };
-
         var millis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var julianDateUt = Mts.GetJulianDateUt(millis);
         var julianDateTt = Mts.GetJulianDateTt(julianDateUt);
@@ -75,19 +70,28 @@
         _earthDateTime = DateTimeOffset.UtcNow.UtcDateTime;
         _coordinatedMarsTime = Mts.GetCoordinatedMarsTime(marsSolDate);
 
-        _formattedMillis = millis.ToString("N0", cultureInfo);
-        _formattedJulianDateUt = julianDateUt.ToString("N5", cultureInfo);
-        _formattedJulianDateTt = julianDateTt.ToString("N5", cultureInfo);
-        _formattedDaysSinceJ2000Epoch = daysSinceJ2000Epoch.ToString("N5", cultureInfo);
-        _formattedMsd = marsSolDate.ToString("N5", cultureInfo);
-        _formattedMeanAnomaly = marsMeanAnomaly.ToString("N5", cultureInfo);
-        _formattedAlphaFms = alphaFms.ToString("N5", cultureInfo);
-        _formattedEoc = equationOfCenter.ToString("N5", cultureInfo);
-        _formattedSolarLongitude = solarLongitude.ToString("N5", cultureInfo);
-        _formattedEot = equationOfTime.ToString("N5", cultureInfo);
-        _formattedMlmst = marsLocalMeanSolarTime.ToString("N5", cultureInfo);
+        _formattedMillis = FormatNumber(millis);
+        _formattedJulianDateUt = FormatNumber(julianDateUt);
+        _formattedJulianDateTt = FormatNumber(julianDateTt);
+        _formattedDaysSinceJ2000Epoch = FormatNumber(daysSinceJ2000Epoch);
+        _formattedMsd = FormatNumber(marsSolDate);
+        _formattedMeanAnomaly = FormatNumber(marsMeanAnomaly);
+        _formattedAlphaFms = FormatNumber(alphaFms);
+        _formattedEoc = FormatNumber(equationOfCenter);
+        _formattedSolarLongitude = FormatNumber(solarLongitude);
+        _formattedEot = FormatNumber(equationOfTime);
+        _formattedMlmst = FormatNumber(marsLocalMeanSolarTime);
 
         InvokeAsync(StateHasChanged);
+    }
+
+    private static string FormatNumber(double number)
+    {
+        var cultureInfo = new CultureInfo("es-ES")
+        {
+            NumberFormat = { NumberDecimalSeparator = ",", NumberGroupSeparator = "." }
+        };
+        return number.ToString("N5", cultureInfo);
     }
 
     public void Dispose()
